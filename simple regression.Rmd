@@ -1,0 +1,100 @@
+---
+title: "simple linear regression"
+author: "zeynep civelek"
+date: "8/18/2021"
+output: word_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+rm(list=ls())#removes any other items in your workspace
+ls()#check whether workspace is empty
+
+
+#install.packages("car") #for regression diagnostics
+#install.packages("QuantPsyc") # to get standardized regression coefficients
+
+#load all the necessary libraries.
+library(boot)
+library(car)
+library(QuantPsyc)
+library(ggplot2)
+
+anxdat <- read.csv("talkanxiety.csv", header=T) #my anxiety level predicted by time to give a talk
+plot(anxdat$time, anxdat$anxiety,
+   xlab="Time to give a talk (hrs)", ylab="Anxiety level (1-100)", pch=19)
+cor.test(anxdat$time, anxdat$anxiety)# check the correlation between 2 variables.
+
+#now add the regression line to the scatterplot.
+plot(anxdat$time, anxdat$anxiety,
+   xlab="Time to give a talk (hrs)", ylab="Anxiety level (1-100)", pch=19)
+abline(lm(anxdat$anxiety~anxdat$time), col="blue")
+
+mean(anxdat$anxiety) #the mean of my anxiety.
+```
+
+
+```{r}
+#move on to the worked example in R - album sales predicted by expenditure in ads.
+salesdat <- read.table("Album Sales 1.dat", header=TRUE)
+summary(salesdat)# check summary for outliers, look at min/max - mean
+str(salesdat) # structure to check if the measurement levels are correct. numerical & interval look good.
+```
+
+```{r}
+#plot the data to see if there is a reason to suspect a curved line.
+plot(salesdat$adverts, salesdat$sales, main="Scatterplot Example",
+   xlab="Money spent on adverts ", ylab="Sales of the album (thousands)", pch=19)+abline(lm(salesdat$sales~salesdat$adverts), col="blue") # regression line (y~x)
+
+mean(salesdat$sales)
+```
+```{r}
+
+#to find out the coefficients that describe this regression line and to see whether this line is a good fit, a good model, we need to run a regression analysis.
+regmodel <- lm(sales ~ adverts, data = salesdat)
+summary(regmodel)
+coef_lmbeta <- lm.beta(regmodel) # this one to get standardized coefficient for our predictor variable. this is more important in a multiple linear regression as the standardized values will allow you to compare the contribution of each predictor. Not so important here.
+coef_lmbeta # you can put this in the table (APA style).
+```
+
+
+
+
+
+
+```{r}
+#looking at the residual plots to check other assumptions - normality of residuals and homoscedasticity.
+salesdat$residuals<-rstandard(regmodel)
+salesdat$residuals
+hist(salesdat$residuals) # here is the histogram of residuals (standardized)
+```
+
+
+```{r}
+plot(regmodel) # this model gives you all 4 graphs for residuals - the first 2 are important (alongside the histogram). The first one shows heteroscedasticity and the QQ-plot shows a move away from normal distribution.
+```
+
+```{r}
+plot(predict(regmodel), salesdat$sales, xlab = "Predicted Values", ylab = "Observed Values") + abline(a = 0, b = 1, col = "red",lwd = 2)
+```
+
+
+```{r}
+#you can also plot the residuals against the predictor values (rather than fitted values), they would be more or less the same in simple regression as there is only 1 predictor.
+sales.res = resid(regmodel)
+plot(salesdat$adverts, sales.res, ylab="Residuals", xlab="Advertisements")+abline(0, 0)    # taken from http://www.r-tutor.com/elementary-statistics/simple-linear-regression/residual-plot         
+
+
+#another way to plot the QQ line
+sales.stdres = rstandard(regmodel)
+qqnorm(sales.stdres, ylab="Standardized Residuals", xlab="Normal Scores", main="Album sales") + qqline(sales.stdres)
+#http://www.r-tutor.com/elementary-statistics/simple-linear-regression/normal-probability-plot-residuals
+
+```
+
+
+
